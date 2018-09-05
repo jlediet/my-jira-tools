@@ -1,0 +1,9 @@
+{
+    "JIRA": {
+        "access":{
+            "user": "{JIRA USER}",
+            "token": "{API TOKEN}",
+            "host": "{HOST}"
+        }
+    }
+}
