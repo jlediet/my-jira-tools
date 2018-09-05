@@ -112,7 +112,7 @@ export default {
     },
     getBoards: function () {
       var self = this
-      this.axios.get('${process.env.API_URL}/api/v1/getBoards')
+      this.axios.get(`${process.env.API_URL}/api/v1/getBoards`)
         .then(function (response) {
           self.boards = response.data.boards.map(b => { return {value: b.id, text: b.name} }).sort((a, b) => {
             return a.text.localeCompare(b.text)
