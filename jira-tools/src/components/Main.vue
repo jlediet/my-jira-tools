@@ -4,10 +4,12 @@
     <h2>Sprint Report</h2>
     <h3>Select Team</h3>
     <b-form-select v-model="selectedGroup" v-on:change="getGroupMembers" :options="groups" class="mb-3" size="sm" />
-    <b-table striped hover :items="groupUsers"></b-table>
     <b-form-select v-model="selectedBoard"  v-on:change="getSprints" :options="boards" class="mb-3" size="sm" />
     <b-form-select v-model="selectedSprint" v-on:change="getIssues" :options="sprints" class="mb-3" size="sm" />
     <h1> Results</h1>
+    <pie :data="timeByIssues" />
+    <h2>Metrics</h2>
+    <b-table striped hover :items="metrics"></b-table>
     <h2>Completed Issues</h2>
     <b-table striped hover :items="completedIssues" :fields="issueFields"></b-table>
     <h2>Incomplete Issues</h2>
@@ -17,8 +19,13 @@
 </template>
 
 <script>
+import pie from './PieChart'
+
 export default {
   name: 'main',
+  components: {
+    pie: pie
+  },
   data () {
     return {
       msg: '',
@@ -37,7 +44,10 @@ export default {
       completedIssues: [],
       incompleteIssues: [],
       groups: [],
-      groupUsers: []
+      groupUsers: [],
+      hours: [],
+      timeByIssues: [],
+      metrics: []
     }
   },
   methods: {
@@ -66,7 +76,55 @@ export default {
           console.log(error)
         })
     },
+    getWorklogs: function (groupName, startDate, endDate) {
+      var self = this
+      let boardId = self.selectedBoard
+      let sprintId = self.selectedSprint
+      console.log(startDate + endDate + groupName)
+      let getWorklogs = `${process.env.API_URL}/api/v1/getTimeForUsers?groupName=${encodeURI(groupName)}&startDate=${encodeURI(startDate)}&endDate=${encodeURI(endDate)}&boardId=${boardId}&sprintId=${sprintId}`
+      console.log(getWorklogs)
+      this.axios.get(getWorklogs)
+        .then(function (response) {
+          self.hours = response.data.worklogs
+          self.timeByIssues = response.data.timeByIssues
+          // let planned = response.data.plannedStoryPoints
+          // let completed = response.data.completedStoryPoints
+          // let incomplete = response.data.incompleteStoryPoints
+          // let percentageCompleted = response.data.percentageCompleted
+          // let countTicketsAddedToSprint = response.data.countTicketsAddedToSprint
+
+          let allMetrics = []
+          allMetrics.push(
+            {
+              Pass: 'Pass',
+              Planned: response.data.plannedStoryPoints,
+              Completed: response.data.completedStoryPoints,
+              Incomplete: response.data.incompleteStoryPoints,
+              PercentageComplete: response.data.percentageCompleted,
+              AddedToSprint: response.data.countTicketsAddedToSprint
+            })
+          self.metrics = allMetrics
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    getMetrics: function (sprintId) {
+      var self = this
+      this.axios.get(`${process.env.API_URL}/api/v1/getSprint/${sprintId}`)
+        .then(function (response) {
+          let startDate = new Date(response.data.sprint.startDate).toISOString().substring(0, 10)
+          let endDate = new Date(response.data.sprint.endDate).toISOString().substring(0, 10)
+          let groupName = self.selectedGroup
+          console.log(startDate + endDate + self.selectedGroup)
+          self.getWorklogs(groupName, startDate, endDate)
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
     getIssues: function (sprintId) {
+      this.getMetrics(sprintId)
       this.getIssuesCompleted(sprintId)
       this.getIssuesNotCompleted(sprintId)
     },

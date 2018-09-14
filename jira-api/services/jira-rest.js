@@ -8,7 +8,9 @@ async function getGroups() {
 }
 
 async function getUsersForGroup(groupName) {
-    let results = await jiraax.axiosGetJira(`rest/api/2/group/member?groupname=${encodeURI(groupName)}`);
+    let restCall = `rest/api/2/group/member?groupname=${encodeURI(groupName)}`;
+    console.log(restCall);
+    let results = await jiraax.axiosGetJira(restCall);
 
     return results.data.values.map(v => {
       return { key: v.key, name: v.name };
@@ -17,10 +19,17 @@ async function getUsersForGroup(groupName) {
 
 async function getWorklog(issueKey){
 
-    return worklogsForIssue;
+    let restCall = `rest/api/2/issue/${issueKey}/worklog?`;
+    console.log(restCall);
+    let results = await jiraax.axiosGetJira(restCall);
+
+    return results.data.worklogs.map(w => {
+        return { author: w.author.key, issueId: w.issueId, timeSpentSeconds: w.timeSpentSeconds }
+    });
 }
 
 module.exports = {
     getGroups:  getGroups,
-    getUsersForGroup:  getUsersForGroup
+    getUsersForGroup:  getUsersForGroup,
+    getWorklog: getWorklog
 }
