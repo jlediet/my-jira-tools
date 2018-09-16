@@ -79,13 +79,15 @@ app.get('/api/v1/getUsersForGroups/:groupName', asyncMiddleware(async function(r
     })
 }));
 
-app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async function(req, res, next){
-
-    let group = req.query.groupName;
-    let startDate = req.query.startDate;
-    let endDate = req.query.endDate;
-    let boardId = req.query.boardId;
-    let sprintId = req.query.sprintId;
+app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async (req, res, next) => {
+    let {
+        groupName, startDate, endDate, boardId, sprintId
+    } = req.query
+    // let group = req.query.groupName;
+    // let startDate = req.query.startDate;
+    // let endDate = req.query.endDate;
+    // let boardId = req.query.boardId;
+    // let sprintId = req.query.sprintId;
 
     let groupMembers = [];
     //GET MEMBERS
