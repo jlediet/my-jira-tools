@@ -82,21 +82,14 @@ app.get('/api/v1/getUsersForGroups/:groupName', asyncMiddleware(async function(r
 app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async (req, res, next) => {
     let {
         groupName, startDate, endDate, boardId, sprintId
-    } = req.query
-    // let group = req.query.groupName;
-    // let startDate = req.query.startDate;
-    // let endDate = req.query.endDate;
-    // let boardId = req.query.boardId;
-    // let sprintId = req.query.sprintId;
-
+    } = req.query;
+    
     let groupMembers = [];
     //GET MEMBERS
     let members = await jiraservices.getUsersForGroup(group);
 
-    for(var member in members)
-    {
-        groupMembers.push({ key: members[member].key, worklogs: [], totalTimeInSeconds: 0 })
-    }
+    members.forEach(member => 
+        groupMembers.push({ key: members[member].key, worklogs: [], totalTimeInSeconds: 0 }));
 
     //GET ISSUES
     let jql = `worklogAuthor in membersOf("${group}") and worklogDate >= "${startDate}" and worklogDate <= "${endDate}"`;
@@ -104,8 +97,8 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async (req, res, next) => {
     let worklogs = [];
     let totalTimeForGroupSeconds = 0;
     let issuesTypeCounts = [];
-    for(var issue in issues)
-    {
+
+    issues.forEach((issue) => {
         let newWorklogs = await jiraservices.getWorklog(issues[issue].key)
         let curIssue = issues[issue];
         let curFields = curIssue.fields;
@@ -134,7 +127,7 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async (req, res, next) => {
                 totalTimeForGroupSeconds += newWorklogs[wlog].timeSpentSeconds;
             }
         }
-    }
+    });
 
     let sprintData = await agileservices.getSprintData(boardId, sprintId);
     let percentageComplete = ((sprintData.completedIssuesEstimateSum.value/sprintData.completedIssuesInitialEstimateSum.value)) * 100
