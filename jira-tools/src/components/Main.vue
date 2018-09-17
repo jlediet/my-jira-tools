@@ -6,29 +6,42 @@
     <b-form-select v-model="selectedGroup" v-on:change="getGroupMembers" :options="groups" class="mb-3" size="sm" />
     <b-form-select v-model="selectedBoard"  v-on:change="getSprints" :options="boards" class="mb-3" size="sm" />
     <b-form-select v-model="selectedSprint" v-on:change="getIssues" :options="sprints" class="mb-3" size="sm" />
+    <b-col sm="3"><label :for="`team-hours`">Full Time Hours Availble</label></b-col>
+    <b-col sm="9"><b-form-input v-model="teamHours" :id="`team-hours`" type="number"></b-form-input></b-col>
+    <div v-if="showResults">
     <h1> Results</h1>
-    <pie :data="timeByIssues" />
-    <h2>Metrics</h2>
-    <b-table striped hover :items="metrics"></b-table>
+    <div class="content-wrapper">
+      <code-loader v-if="!metrics" :speed="2" :animate="true">
+      </code-loader>
+      <div v-else>
+        <pie :data="timeByIssues" />
+        <h2>Metrics</h2>
+        <b-table striped hover :items="metrics"></b-table>
+      </div>
+    </div>
     <h2>Completed Issues</h2>
     <b-table striped hover :items="completedIssues" :fields="issueFields"></b-table>
     <h2>Incomplete Issues</h2>
     <b-table striped hover :items="incompleteIssues"  :fields="issueFields"></b-table>
+    </div>
     <h2>Releases</h2>
   </div>
 </template>
 
 <script>
 import pie from './PieChart'
+import { CodeLoader } from 'vue-content-loader'
 
 export default {
   name: 'main',
   components: {
-    pie: pie
+    pie: pie,
+    CodeLoader: CodeLoader
   },
   data () {
     return {
       msg: '',
+      showResults: false,
       selectedBoard: null,
       selectedSprint: null,
       selectedGroup: null,
@@ -47,7 +60,8 @@ export default {
       groupUsers: [],
       hours: [],
       timeByIssues: [],
-      metrics: []
+      metrics: null,
+      teamHours: 0
     }
   },
   methods: {
@@ -87,11 +101,6 @@ export default {
         .then(function (response) {
           self.hours = response.data.worklogs
           self.timeByIssues = response.data.timeByIssues
-          // let planned = response.data.plannedStoryPoints
-          // let completed = response.data.completedStoryPoints
-          // let incomplete = response.data.incompleteStoryPoints
-          // let percentageCompleted = response.data.percentageCompleted
-          // let countTicketsAddedToSprint = response.data.countTicketsAddedToSprint
 
           let allMetrics = []
           allMetrics.push(
@@ -101,7 +110,9 @@ export default {
               Completed: response.data.completedStoryPoints,
               Incomplete: response.data.incompleteStoryPoints,
               PercentageComplete: response.data.percentageCompleted,
-              AddedToSprint: response.data.countTicketsAddedToSprint
+              AddedToSprint: response.data.countTicketsAddedToSprint,
+              Velocity: response.data.velocityLast2,
+              DevWorkRate: ((response.data.totalTimeForGroupHours / self.teamHours) * 100)
             })
           self.metrics = allMetrics
         })
@@ -124,6 +135,8 @@ export default {
         })
     },
     getIssues: function (sprintId) {
+      var self = this
+      self.showResults = true
       this.getMetrics(sprintId)
       this.getIssuesCompleted(sprintId)
       this.getIssuesNotCompleted(sprintId)

@@ -7,7 +7,6 @@ var appRouter = function (app) {
 
 // get all todos
 app.get('/api/v1/getBoards', asyncMiddleware(async function(req, res, next){
-    console.log('GetBoards');
     let data = await agileservices.getBoards();
     res.status(200).send({
       success: 'true',
@@ -17,7 +16,6 @@ app.get('/api/v1/getBoards', asyncMiddleware(async function(req, res, next){
   }));
 
   app.get('/api/v1/getSprint/:sprintId', asyncMiddleware(async function(req, res, next){
-
     let data = await agileservices.getSprint(req.params.sprintId);
     res.status(200).send({
       success: 'true',
@@ -25,9 +23,8 @@ app.get('/api/v1/getBoards', asyncMiddleware(async function(req, res, next){
       sprint: data
     })
   }));
-  // get all todos
-app.get('/api/v1/getSprints/:boardId', asyncMiddleware(async function(req, res, next){
 
+  app.get('/api/v1/getSprints/:boardId', asyncMiddleware(async function(req, res, next){
     let data = await agileservices.getSprints(req.params.boardId);
     res.status(200).send({
       success: 'true',
@@ -36,29 +33,26 @@ app.get('/api/v1/getSprints/:boardId', asyncMiddleware(async function(req, res, 
     })
   }));
 
-app.get('/api/v1/getCompletedIssues/:sprintId', asyncMiddleware(async function(req, res, next){
+  app.get('/api/v1/getCompletedIssues/:sprintId', asyncMiddleware(async function(req, res, next){
+    let data = await agilehelpers.getCompletedIssues(req.params.sprintId);
+    res.status(200).send({
+        success: 'true',
+        message: 'Completed Issues Retreived',
+        issues: data
+    })
+  }));
 
-let data = await agilehelpers.getCompletedIssues(req.params.sprintId);
-res.status(200).send({
-    success: 'true',
-    message: 'Completed Issues Retreived',
-    issues: data
-})
-}));
+  app.get('/api/v1/getIncompleteIssues/:sprintId', asyncMiddleware(async function(req, res, next){
+    let data = await agilehelpers.getInCompleteIssues(req.params.sprintId);
+    console.log(data);
+    res.status(200).send({
+        success: 'true',
+        message: 'Incomplete Issues Retreived',
+        issues: data
+    })
+  }));
 
-app.get('/api/v1/getIncompleteIssues/:sprintId', asyncMiddleware(async function(req, res, next){
-
-let data = await agilehelpers.getInCompleteIssues(req.params.sprintId);
-console.log(data);
-res.status(200).send({
-    success: 'true',
-    message: 'Incomplete Issues Retreived',
-    issues: data
-})
-}));
-
-app.get('/api/v1/getGroups/', asyncMiddleware(async function(req, res, next){
-
+  app.get('/api/v1/getGroups/', asyncMiddleware(async function(req, res, next){
     let data = await jiraservices.getGroups();
     console.log(data);
     res.status(200).send({
@@ -66,18 +60,18 @@ app.get('/api/v1/getGroups/', asyncMiddleware(async function(req, res, next){
         message: 'Groups Retreived',
         groups: data
     })
-}));
+  }));
 
-app.get('/api/v1/getUsersForGroups/:groupName', asyncMiddleware(async function(req, res, next){
+  app.get('/api/v1/getUsersForGroups/:groupName', asyncMiddleware(async function(req, res, next){
 
-    let data = await jiraservices.getUsersForGroup(req.params.groupName);
-    console.log(data);
-    res.status(200).send({
-        success: 'true',
-        message: 'Users for Groups Retreived',
-        groups: data
-    })
-}));
+      let data = await jiraservices.getUsersForGroup(req.params.groupName);
+      console.log(data);
+      res.status(200).send({
+          success: 'true',
+          message: 'Users for Groups Retreived',
+          groups: data
+      })
+  }));
 
 app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async function(req, res, next){
 
@@ -104,7 +98,6 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async function(req, res, nex
     let issuesTypeCounts = [];
     for(var issue in issues)
     {
-        let newWorklogs = await jiraservices.getWorklog(issues[issue].key)
         let curIssue = issues[issue];
         let curFields = curIssue.fields;
         let issueType = curFields.issuetype.name;
@@ -123,6 +116,7 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async function(req, res, nex
           }
         }
 
+        let newWorklogs = await jiraservices.getWorklog(issues[issue].key)
         for(var wlog in newWorklogs){
 
             var obj = groupMembers.find(function (obj) { return obj.key === newWorklogs[wlog].author; });
@@ -151,7 +145,8 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async function(req, res, nex
         completedStoryPoints: sprintData.completedIssuesEstimateSum.value,
         incompleteStoryPoints: sprintData.issuesNotCompletedEstimateSum.value,
         percentageCompleted: percentageComplete,
-        countTicketsAddedToSprint: storiesAdded
+        countTicketsAddedToSprint: storiesAdded,
+        velocityLast2: -1
     })
 }));
 
