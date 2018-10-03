@@ -10,7 +10,7 @@ Links:
 -->
 
 <template>
-  <svg width='500' height='300'></svg>
+  <svg width='700' height='300'></svg>
 </template>
 
 <script>
@@ -48,6 +48,18 @@ export default {
         `translate(${chartWidth / 2}, ${chartHeight / 2})`
       )
 
+    this.legend = this.chartLayer
+      .append('g')
+      .attr(
+        'transform',
+        `translate(${chartWidth - 200},0)`
+      )
+
+    this.legendX = (chartWidth / 2) - 200
+    this.legendY = (chartHeight / 2) * -1
+    this.legendW = 200
+    this.legendL = 125
+
     this.drawChart(this.data)
   },
   props: ['data'],
@@ -65,27 +77,47 @@ export default {
       var block = this.pieG.selectAll('.arc')
         .data(arcs)
 
+      var legendBlock = this.legend.selectAll('.legend')
+        .data(arcs)
+
       block.select('path').attr('d', this.arc)
+      legendBlock.select('path').attr('d', this.arc)
 
       var newBlock = block
         .enter()
         .append('g')
         .classed('arc', true)
 
+      var newLegendBlock = legendBlock
+        .enter()
+        .append('g')
+        .classed('legend', true)
+
+      var colorScale = d3.scaleOrdinal(d3['schemePaired'])
+
       newBlock.append('path')
         .attr('d', this.arc)
         .attr('id', function (d, i) { return 'arc-' + i })
         .attr('stroke', 'gray')
-        .attr('fill', d => d3.interpolateSpectral(Math.random()))
+        .attr('fill', (d, i) => colorScale(i * 3))
 
-      console.log(this.arc)
-
-      newBlock.append('text')
-        .attr('dx', 10)
-        .attr('dy', -5)
-        // .append('textPath')
-        .attr('xlink:href', function (d, i) { return '#arc-' + i })
+      newLegendBlock.append('text')
+        .attr('x', 1)
+        .attr('y', function (d, i) {
+          return ((20 * (i + 1)))
+        })
+        .attr('width', 150)
         .text(function (d) { return d.data.type })
+
+      newLegendBlock.append('rect')
+        .attr('x', 151)
+        .attr('y', function (d, i) {
+          return ((20 * i))
+        })
+        .attr('width', 20)
+        .attr('height', 20)
+        .style('fill', (d, i) => colorScale(i * 3))
+        .style('stroke', '#000000')
     }
   }
 }
