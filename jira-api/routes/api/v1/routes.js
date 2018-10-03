@@ -80,21 +80,22 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async (req, res, next) => {
 
     let groupMembers = [];
     //GET MEMBERS
-    let members = await jiraservices.getUsersForGroup(group);
+
+    let members = await jiraservices.getUsersForGroup(groupName);
 
     members.forEach(member =>
-        groupMembers.push({ key: members[member].key, worklogs: [], totalTimeInSeconds: 0 }));
+        groupMembers.push({ key: member.key, worklogs: [], totalTimeInSeconds: 0 }));
 
     //GET ISSUES
-    let jql = `worklogAuthor in membersOf("${group}") and worklogDate >= "${startDate}" and worklogDate <= "${endDate}"`;
+    let jql = `worklogAuthor in membersOf("${groupName}") and worklogDate >= "${startDate}" and worklogDate <= "${endDate}"`;
     let issues = await agileservices.searchIssues(jql);
     let worklogs = [];
     let totalTimeForGroupSeconds = 0;
     let issuesTypeCounts = [];
 
-    issues.forEach((issue) => {
-        let newWorklogs = await jiraservices.getWorklog(issues[issue].key)
-        let curIssue = issues[issue];
+    issues.forEach(async (curIssue) => {
+        //let newWorklogs = await jiraservices.getWorklog(issues[issue].key)
+        //let curIssue = issues[issue];
         let curFields = curIssue.fields;
         let issueType = curFields.issuetype.name;
 
@@ -112,7 +113,7 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async (req, res, next) => {
           }
         }
 
-        let newWorklogs = await jiraservices.getWorklog(issues[issue].key)
+        let newWorklogs = await jiraservices.getWorklog(curIssue.key)
         for(var wlog in newWorklogs){
 
             var obj = groupMembers.find(function (obj) { return obj.key === newWorklogs[wlog].author; });
@@ -139,7 +140,7 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async (req, res, next) => {
         worklogs: groupMembers,
         plannedStoryPoints: sprintData.completedIssuesInitialEstimateSum.value,
         completedStoryPoints: sprintData.completedIssuesEstimateSum.value,
-        incompleteStoryPoints: sprintData.issuesNotCompletedEstimateSum.value,
+        incompleteStoryPoints: sprintData.issuesNotCompletedEstimateSum.value || 0,
         percentageCompleted: percentageComplete,
         countTicketsAddedToSprint: storiesAdded,
         velocityLast2: -1
