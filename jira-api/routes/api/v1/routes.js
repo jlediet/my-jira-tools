@@ -2,6 +2,7 @@ const asyncMiddleware = require('../../../middleware/async');
 const agileservices = require('../../../services/jira-agile');
 const jiraservices = require('../../../services/jira-rest');
 const agilehelpers = require('../../../helpers/jira-agile');
+var moment = require('moment');
 
 var appRouter = function (app) {
 
@@ -89,62 +90,65 @@ app.get('/api/v1/getTimeForUsers/', asyncMiddleware(async (req, res, next) => {
     //GET ISSUES
     let jql = `worklogAuthor in membersOf("${groupName}") and worklogDate >= "${startDate}" and worklogDate <= "${endDate}"`;
     let issues = await agileservices.searchIssues(jql);
-    let worklogs = [];
     let totalTimeForGroupSeconds = 0;
     let issuesTypeCounts = [];
 
+    //Build list of issues by unqiue IssueType
+    let unique = [...new Set(issues.map(issue => issue.fields.issuetype.name))];
+    unique.forEach(v =>  issuesTypeCounts.push({type: v, timeSpentSeconds:0, timeSpentHours: 0}));
+    var mStartDate = moment(startDate);
+    var mEndDate = moment(endDate);
+
     issues.forEach(async (curIssue) => {
-        //let newWorklogs = await jiraservices.getWorklog(issues[issue].key)
-        //let curIssue = issues[issue];
         let curFields = curIssue.fields;
         let issueType = curFields.issuetype.name;
 
         if(issueType === 'Sub-task'){
           issueType = curFields.parent.fields.issuetype.name;
         }
+
         var issueObj = issuesTypeCounts.find(function(iobj){ return iobj.type === issueType;})
 
-        if(issueType != "Epic"){
-          if(typeof issueObj == "undefined"){
-            issuesTypeCounts.push({type: issueType, timeSpentSeconds:curFields.aggregatetimespent})
-          }
-          else{
-            issueObj.timeSpentSeconds += curFields.aggregatetimespent
-          }
-        }
-
         let newWorklogs = await jiraservices.getWorklog(curIssue.key)
+        console.log(curIssue.key);
         for(var wlog in newWorklogs){
+          var curLog = newWorklogs[wlog];
+          var mUpdatedDate = moment(moment(curLog.started).format("YYYY-MM-DD"));
+          //if (curIssue.key == "MYP-2162") console.log(curLog + '' + mUpdatedDate.isSameOrAfter(mStartDate) + ' ' + mUpdatedDate.isSameOrBefore(mEndDate));
+          if(mUpdatedDate.isSameOrAfter(mStartDate) && mUpdatedDate.isSameOrBefore(mEndDate)){
+            console.log(curLog)
+            var obj = groupMembers.find(function (obj) { return obj.key === curLog.author; });
 
-            var obj = groupMembers.find(function (obj) { return obj.key === newWorklogs[wlog].author; });
             if (typeof obj != "undefined") {
-                // obj.worklogs.push({ issueId: newWorklogs[wlog].issueId, timeSpendSeconds: newWorklogs[wlog].timeSpentSeconds });
-                obj.totalTimeInSeconds += newWorklogs[wlog].timeSpentSeconds;
-                totalTimeForGroupSeconds += newWorklogs[wlog].timeSpentSeconds;
+              issueObj.timeSpentSeconds += curLog.timeSpentSeconds;
+              issueObj.timeSpentHours += curLog.timeSpentSeconds/3600;
+              console.log(curLog.timeSpentSeconds/3600);
             }
+          }
         }
+
     });
 
     let sprintData = await agileservices.getSprintData(boardId, sprintId);
     let percentageComplete = ((sprintData.completedIssuesEstimateSum.value/sprintData.completedIssuesInitialEstimateSum.value)) * 100
     let storiesAdded = Object.keys(sprintData.issueKeysAddedDuringSprint).length
-    console.log(storiesAdded)
-    res.status(200).send({
-        success: 'true',
-        message: 'Users for Groups Retreived',
-        totalTimeForGroupSeconds: totalTimeForGroupSeconds,
-        totalTimeFrGroupMinutes: totalTimeForGroupSeconds/ 60,
-        totalTimeForGroupHours: (totalTimeForGroupSeconds/60)/60,
-        totalTimeForGroupDays: ((totalTimeForGroupSeconds/60)/60)/6,
-        timeByIssues: issuesTypeCounts,
-        worklogs: groupMembers,
-        plannedStoryPoints: sprintData.completedIssuesInitialEstimateSum.value,
-        completedStoryPoints: sprintData.completedIssuesEstimateSum.value,
-        incompleteStoryPoints: sprintData.issuesNotCompletedEstimateSum.value || 0,
-        percentageCompleted: percentageComplete,
-        countTicketsAddedToSprint: storiesAdded,
-        velocityLast2: -1
-    })
+    let payload = {
+      success: 'true',
+      message: 'Users for Groups Retreived',
+      totalTimeForGroupSeconds: totalTimeForGroupSeconds,
+      totalTimeFrGroupMinutes: totalTimeForGroupSeconds/ 60,
+      totalTimeForGroupHours: (totalTimeForGroupSeconds/60)/60,
+      totalTimeForGroupDays: ((totalTimeForGroupSeconds/60)/60)/6,
+      timeByIssues: issuesTypeCounts,
+      worklogs: groupMembers,
+      plannedStoryPoints: sprintData.completedIssuesInitialEstimateSum.value,
+      completedStoryPoints: sprintData.completedIssuesEstimateSum.value,
+      incompleteStoryPoints: sprintData.issuesNotCompletedEstimateSum.value || 0,
+      percentageCompleted: percentageComplete,
+      countTicketsAddedToSprint: storiesAdded,
+      velocityLast2: -1
+  };
+  res.status(200).send(payload)
 }));
 
 }

@@ -10,7 +10,7 @@ Links:
 -->
 
 <template>
-  <svg width='700' height='300'></svg>
+  <svg width='1000' height='600'></svg>
 </template>
 
 <script>
@@ -77,6 +77,7 @@ export default {
       var block = this.pieG.selectAll('.arc')
         .data(arcs)
 
+      this.legend.selectAll('.legend').remove()
       var legendBlock = this.legend.selectAll('.legend')
         .data(arcs)
 
@@ -102,15 +103,22 @@ export default {
         .attr('fill', (d, i) => colorScale(i * 3))
 
       newLegendBlock.append('text')
+        .attr('d', this.arc)
+        .attr('id', function (d, i) { return 'legend-txt-' + i })
         .attr('x', 1)
         .attr('y', function (d, i) {
           return ((20 * (i + 1)))
         })
-        .attr('width', 150)
-        .text(function (d) { return d.data.type })
+        .attr('width', 180)
+        .text(function (d) {
+          var v = Math.round(d.data.timeSpentSeconds / 3600)
+          return d.data.type + ' (' + v.toString() + 'h )'
+        })
 
       newLegendBlock.append('rect')
-        .attr('x', 151)
+        .attr('d', this.arc)
+        .attr('id', function (d, i) { return 'legend-rect-' + i })
+        .attr('x', 180)
         .attr('y', function (d, i) {
           return ((20 * i))
         })

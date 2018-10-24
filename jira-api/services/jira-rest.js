@@ -22,9 +22,10 @@ async function getWorklog(issueKey){
     let restCall = `rest/api/2/issue/${issueKey}/worklog?`;
     console.log(restCall);
     let results = await jiraax.axiosGetJira(restCall);
-
+    if (issueKey == "MYP-2162") console.log(results);
     return results.data.worklogs.map(w => {
-        return { author: w.author.key, issueId: w.issueId, timeSpentSeconds: w.timeSpentSeconds }
+        if (issueKey == "MYP-2162") console.log(w);
+        return { author: w.author.key, issueId: w.issueId, timeSpentSeconds: w.timeSpentSeconds, created: w.created, updated: w.updated, started: w.started }
     });
 }
 

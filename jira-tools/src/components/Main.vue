@@ -9,20 +9,21 @@
     <b-col sm="3"><label :for="`team-hours`">Full Time Hours Availble</label></b-col>
     <b-col sm="9"><b-form-input v-model="teamHours" :id="`team-hours`" type="number"></b-form-input></b-col>
     <div v-if="showResults">
-    <h1> Results</h1>
-    <div class="content-wrapper">
-      <code-loader v-if="!metrics" :speed="2" :animate="true">
-      </code-loader>
-      <div v-else>
-        <pie :data="timeByIssues" />
-        <h2>Metrics</h2>
-        <b-table striped hover :items="metrics"></b-table>
+      <h1> Results</h1>
+      <div class="content-wrapper">
+        <code-loader v-if="!metrics" :speed="2" :animate="true">
+        </code-loader>
+        <div v-else>
+          <pie :data="timeByIssues" />
+          <h2>Metrics</h2>
+          <b-table striped hover :items="metrics"></b-table>
+          <b-table striped hover :items="timeByIssues"></b-table>
+          <h2>Completed Issues</h2>
+          <b-table striped hover :items="completedIssues" :fields="issueFields"></b-table>
+          <h2>Incomplete Issues</h2>
+          <b-table striped hover :items="incompleteIssues"  :fields="issueFields"></b-table>
+        </div>
       </div>
-    </div>
-    <h2>Completed Issues</h2>
-    <b-table striped hover :items="completedIssues" :fields="issueFields"></b-table>
-    <h2>Incomplete Issues</h2>
-    <b-table striped hover :items="incompleteIssues"  :fields="issueFields"></b-table>
     </div>
     <h2>Releases</h2>
   </div>
