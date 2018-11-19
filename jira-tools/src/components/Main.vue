@@ -8,13 +8,14 @@
     <b-form-select v-model="selectedSprint" v-on:change="getIssues" :options="sprints" class="mb-3" size="sm" />
     <b-col sm="3"><label :for="`team-hours`">Full Time Hours Availble</label></b-col>
     <b-col sm="9"><b-form-input v-model="teamHours" :id="`team-hours`" type="number"></b-form-input></b-col>
+    <button v-on:click="exportImage">Export Image</button>
     <div v-if="showResults">
       <h1> Results</h1>
-      <div class="content-wrapper">
+      <div id="content-wrapper" class="content-wrapper">
         <code-loader v-if="!metrics" :speed="2" :animate="true">
         </code-loader>
         <div v-else>
-          <pie :data="timeByIssues" />
+          <pie :id="pieChart" :data="timeByIssues" />
           <h2>Metrics</h2>
           <b-table striped hover :items="metrics"></b-table>
           <b-table striped hover :items="timeByIssues"></b-table>
@@ -32,6 +33,7 @@
 <script>
 import pie from './PieChart'
 import { CodeLoader } from 'vue-content-loader'
+import domtoimage from 'dom-to-image'
 
 export default {
   name: 'main',
@@ -193,6 +195,15 @@ export default {
         })
         .catch(function (error) {
           console.log(error)
+        })
+    },
+    exportImage: function () {
+      domtoimage.toSvg(document.getElementById('content-wrapper'), { quality: 1, bgcolor: '#ffffff' })
+        .then(function (dataUrl) {
+          var link = document.createElement('a')
+          link.download = 'my-image-name.svg'
+          link.href = dataUrl
+          link.click()
         })
     }
   },

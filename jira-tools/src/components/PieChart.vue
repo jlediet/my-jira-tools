@@ -10,7 +10,7 @@ Links:
 -->
 
 <template>
-  <svg width='1000' height='600'></svg>
+  <svg id="pieChart" width='1000' height='600'></svg>
 </template>
 
 <script>
