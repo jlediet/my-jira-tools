@@ -1,8 +1,6 @@
 <template>
   <div class="main col-8">
     <h1>{{ msg }}</h1>
-    <h2>Sprint Report</h2>
-    <h3>Select Team</h3>
     <b-form-select v-model="selectedGroup" v-on:change="getGroupMembers" :options="groups" class="mb-3" size="sm" />
     <b-form-select v-model="selectedBoard"  v-on:change="getSprints" :options="boards" class="mb-3" size="sm" />
     <b-form-select v-model="selectedSprint" v-on:change="getIssues" :options="sprints" class="mb-3" size="sm" />
@@ -31,7 +29,7 @@
 </template>
 
 <script>
-import pie from './PieChart'
+import pie from '../components/PieChart'
 import { CodeLoader } from 'vue-content-loader'
 import domtoimage from 'dom-to-image'
 
@@ -74,6 +72,7 @@ export default {
       this.axios.get(`${process.env.API_URL}/api/v1/getGroups`)
         .then(function (response) {
           self.groups = response.data.groups.map(g => { return { value: g.name, text: g.name } })
+          self.groups.push({value: null, text: 'Select a team.'})
           console.log(self.groups)
         })
         .catch(function (error) {
