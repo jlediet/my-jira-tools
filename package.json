@@ -1,0 +1,26 @@
+{
+  "name": "sprint-results",
+  "version": "1.0.0",
+  "description": "A Vue.js project",
+  "author": "Jamie Lediet",
+  "private": true,
+  "scripts": {
+    "start_tools": "npm start --prefix jira-tools",
+    "start_api": "npm start --prefix jira-api",
+    "start": "concurrently \"npm:start_api\" \"npm:start_tools\""
+  },
+  "dependencies": {
+    "concurrently": "^4.1.0",
+    "npm": "^6.8.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">= 4.0.0",
+    "npm": ">= 3.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}

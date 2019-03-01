@@ -6,14 +6,19 @@
     <b-form-select v-model="selectedSprint" v-on:change="getIssues" :options="sprints" class="mb-3" size="sm" />
     <b-col sm="3"><label :for="`team-hours`">Full Time Hours Availble</label></b-col>
     <b-col sm="9"><b-form-input v-model="teamHours" :id="`team-hours`" type="number"></b-form-input></b-col>
-    <button v-on:click="exportImage">Export Image</button>
+    <div>
+      <button v-on:click="exportSVG">Export SVG</button>
+      <button v-on:click="exportPNG">Export PNG</button>
+    </div>
     <div v-if="showResults">
       <h1> Results</h1>
       <div id="content-wrapper" class="content-wrapper">
         <code-loader v-if="!metrics" :speed="2" :animate="true">
         </code-loader>
         <div v-else>
-          <pie :id="pieChart" :data="timeByIssues" />
+          <div id="pieChart">
+            <pie :id="pieChart" :data="timeByIssues" />
+          </div>
           <h2>Metrics</h2>
           <b-table striped hover :items="metrics"></b-table>
           <b-table striped hover :items="timeByIssues"></b-table>
@@ -196,11 +201,20 @@ export default {
           console.log(error)
         })
     },
-    exportImage: function () {
-      domtoimage.toSvg(document.getElementById('content-wrapper'), { quality: 1, bgcolor: '#ffffff' })
+    exportSVG: function () {
+      domtoimage.toSvg(document.getElementById('pieChart'), { quality: 1, bgcolor: '#ffffff' })
         .then(function (dataUrl) {
           var link = document.createElement('a')
           link.download = 'my-image-name.svg'
+          link.href = dataUrl
+          link.click()
+        })
+    },
+    exportPNG: function () {
+      domtoimage.toPng(document.getElementById('pieChart'), { quality: 1, bgcolor: '#ffffff' })
+        .then(function (dataUrl) {
+          var link = document.createElement('a')
+          link.download = 'pieChart.png'
           link.href = dataUrl
           link.click()
         })
